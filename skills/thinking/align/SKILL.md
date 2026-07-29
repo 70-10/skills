@@ -13,7 +13,7 @@ Once the subject or question is clear, select the skill that addresses the main 
 - `first-bet`: the situation or question is identifiable, but the right answer is unclear and the first hypothesis worth testing must be chosen.
 - `brief`: the implementation task is identifiable, but its requirements, completion criteria, and implementation approach need alignment.
 - `discover`: the question or problem is identifiable, but the knowledge, context, and important unknowns needed to understand the subject are unclear.
-- `refine`: a GitHub Issue is identifiable, but it must be investigated, clarified, and rewritten into an approved, self-contained issue body ready for implementation.
+- `refine`: a GitHub Issue is identifiable, but its body must be investigated, clarified, and rewritten so a subsequent agent can autonomously investigate, design, implement, and verify the work.
 
 If the subject and matching skill are already clear, skip alignment questions. If multiple skills fit, choose the one that most directly addresses the main unresolved uncertainty. When both `brief` and `refine` fit, choose `refine` if updating the GitHub Issue body is the desired result; choose `brief` if the desired result is an implementation specification without editing the issue.
 
