@@ -1,6 +1,6 @@
 # Agent Skills
 
-Reusable [Agent Skills](https://agentskills.io/) for decision documentation and structured thinking. Install only the skills you need with the [`skills` CLI](https://github.com/vercel-labs/skills).
+Reusable [Agent Skills](https://agentskills.io/) for decision documentation, structured thinking, and test-first implementation. Install only the skills you need with the [`skills` CLI](https://github.com/vercel-labs/skills).
 
 ## Published skills
 
@@ -13,6 +13,7 @@ Reusable [Agent Skills](https://agentskills.io/) for decision documentation and 
 | `elaborate` | Clarify purpose, scope, success criteria, and constraints through dialogue |
 | `first-bet` | Choose the first hypothesis worth testing when the answer is unclear |
 | `refine` | Refine a GitHub Issue so a subsequent agent can autonomously investigate, design, implement, and verify the work |
+| `tdd` | Drive an implementation test-first, keeping the resulting tests free of gaps and duplicates |
 
 ## Installation
 
