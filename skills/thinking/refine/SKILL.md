@@ -14,13 +14,15 @@ Before presenting the body, inventory all decisions left to the subsequent agent
 The revised issue body must convey:
 
 - The purpose, background, and expected outcome
-- The scope and constraints
+- The scope and constraints, including what is out of scope wherever the boundary could be misread
 - Objective completion criteria and verification methods
 - Decisions intentionally delegated to the subsequent agent
 - Conditions under which execution must stop and ask for clarification
 - Implementation direction, only when needed to preserve an agreed decision
 
 Place the completion criteria, the delegated decisions, and the stop conditions where each can be located on its own, without reading the surrounding prose; a subsequent agent returns to these three while executing.
+
+Decide each section's name separately. Where the repository declares section names that the subsequent agent or its tooling reads, such as in `CLAUDE.md` or in a skill or agent definition that consumes issue bodies, use the declared name exactly for the content it covers, since such tooling locates a section by its name, even when the source issue holds that content under a different heading. For other content, keep the source issue's headings where it has them, and name any added section by its content. This naming does not override the placement above: move the completion criteria, the delegated decisions, and the stop conditions out of any section that mixes them with other content.
 
 Make every completion criterion objectively judgeable, and include concrete test, lint, type-check, or other commands when they can be established from the repository. When the verification procedure cannot be determined without implementation work, state the observable expected result and leave only the procedure to the subsequent agent. When verification cannot be automated, give specific manual steps and expected results.
 
@@ -30,7 +32,7 @@ For each decision that defines the required outcome or a constraint, reverse it 
 
 Write every stop condition as an observable trigger the subsequent agent can evaluate without a person present. Pair each trigger with the kind of reason for stopping, such as an undelegated decision, conflicting requirements, a compatibility change outside the agreed scope, or an irreversible action outside the agreed authorization. Specify the evidence or state that triggers the stop rather than relying on someone to notice a problem during execution.
 
-Do not invent requirements, outcomes, constraints, or agreed decisions. State facts established by inspecting the repository together with the point at which they were observed. Do not present the expected result of other work as an established fact; record it as a dependency on that work. Preserve useful source information while restructuring the full issue body. Surface contradictions and obsolete requirements instead of silently choosing between them.
+Do not invent requirements, outcomes, constraints, or agreed decisions. State facts established by inspecting the repository together with the point at which they were observed. Do not present the expected result of other work as an established fact; record it as a dependency on that work. Preserve useful source information. Change the source issue's section structure only where the placement and section naming above require it, and rewrite the content within sections as needed. Surface contradictions and obsolete requirements instead of silently choosing between them.
 
 The issue body is ready to present when the expected outcome and important constraints are clear, every material decision has been resolved, the boundary between delegated decisions and conditions requiring escalation is clear, and the subsequent agent can begin investigation and implementation autonomously.
 
