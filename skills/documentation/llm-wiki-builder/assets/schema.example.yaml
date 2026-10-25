@@ -1,0 +1,42 @@
+# llm-wiki-builder の雛形。生成先に写したら、この 2 行のコメントは消す（この skill の references は生成先から辿れない）。
+# 値は project 種類の一例。型の設計で決め直す。
+
+# <kind>context/schema.yaml: 型・キー・語彙の正。tools/context.py はこのファイルだけを読む。
+kind: project
+title: <リポジトリ名> のプロジェクトコンテキスト
+description: <何についての事実を、誰が引くために置くかを 1 文で>
+
+# ディレクトリは更新の仕方で分ける。1 つのディレクトリに複数の type を置いてよい
+dirs:
+  entities:  {types: [system, term], protocol: overwrite}
+  decisions: {types: [decision], protocol: append-only}
+  threads:   {types: [thread], protocol: status}
+
+# 「## <id> <残り>」の見出しで項目を束ねるファイル（bundle からの相対パス）
+collections:
+  people.md: {type: person}
+
+common:
+  required: [type, title, description, sources]
+  optional: [aliases, tags, generated, verified, stale_after, status, superseded_by, supersedes, related, rendered_in]
+
+types:
+  decision:
+    required: [decided_at, decided_by]
+    sections: [決めたこと, 理由と見送った案, 崩れる条件]
+  thread:
+    required: [status]
+    optional: [resolved_by]
+    enums: {status: [open, resolved, dropped]}
+
+enums:
+  status: [active, superseded]
+
+date_keys: [decided_at, stale_after]
+person_keys: [decided_by]   # 値の human:<id> は people.md の「## <id>」に無ければ FAIL
+people: people.md
+source_kinds: [minutes, doc, issue, code, conversation]
+filename: '^[a-z0-9][a-z0-9-]*\.md$'
+inflows: ['meeting-minutes/*.md']   # リポジトリのルートからの glob。どのページからも参照されなければ FAIL
+deferred: []                        # 取り込みを後回しにした入り口のファイル。FAIL ではなく WARN になる
+max_body_lines: 80
