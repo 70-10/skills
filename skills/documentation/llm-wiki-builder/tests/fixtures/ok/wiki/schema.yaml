@@ -1,0 +1,23 @@
+kind: project
+title: Example wiki
+description: Facts that a sample project keeps for AI agents.
+dirs:
+  entities: {types: [system, term], protocol: overwrite}
+  decisions: {types: [decision], protocol: append-only}
+collections:
+  people.md: {type: person}
+common:
+  required: [type, title, description, sources]
+  optional: [aliases, tags, generated, verified, stale_after, status, superseded_by, supersedes, rendered_in]
+types:
+  decision:
+    required: [decided_at, decided_by]
+    sections: [Context, Decision]
+enums:
+  status: [active, superseded]
+date_keys: [decided_at, stale_after]
+person_keys: [decided_by]
+people: people.md
+filename: '^[a-z0-9][a-z0-9-]*\.md$'
+inflows: ['meeting-minutes/*.md']
+max_body_lines: 40

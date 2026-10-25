@@ -1,0 +1,43 @@
+# llm-wiki-builder template; remove these first two comments after copying.
+# Project example only: redesign types and localize prose and section names for the target repository.
+
+# <kind>context/schema.yaml owns types, keys, and vocabularies for tools/context.py.
+kind: project
+title: <Repository name> project context
+description: <One sentence describing the facts and their intended readers>
+
+# Organize directories by update behavior; a directory may allow multiple types.
+dirs:
+  entities:  {types: [system, term], protocol: overwrite}
+  decisions: {types: [decision], protocol: append-only}
+  threads:   {types: [thread], protocol: status}
+
+# Collection paths are bundle-relative; entries use "## <id> <heading remainder>".
+collections:
+  people.md: {type: person}
+
+common:
+  required: [type, title, description, sources]
+  optional: [aliases, tags, generated, verified, stale_after, status, superseded_by, supersedes, related, rendered_in]
+
+types:
+  decision:
+    required: [decided_at, decided_by]
+    # Adapt these headings to the selected output language, matching page templates.
+    sections: [Decision, Rationale and rejected alternatives, Invalidating conditions]
+  thread:
+    required: [status]
+    optional: [resolved_by]
+    enums: {status: [open, resolved, dropped]}
+
+enums:
+  status: [active, superseded]
+
+date_keys: [decided_at, stale_after]
+person_keys: [decided_by]   # human:<id> values must appear under "## <id>" in people.md.
+people: people.md
+source_kinds: [minutes, doc, issue, code, conversation]
+filename: '^[a-z0-9][a-z0-9-]*\.md$'
+inflows: ['meeting-minutes/*.md']   # Repository-relative globs; uncited inputs fail audit.
+deferred: []                        # Postponed inputs warn instead of failing.
+max_body_lines: 80
