@@ -1,28 +1,24 @@
-# 種類の選び方
+# Choosing a context kind
 
-種類によって、置き場の名前（`<kind>context/`）、よく問われること、型の候補、資料の入り口が変わる。
+The kind determines the bundle name, recurring questions, candidate types, and source inputs.
 
-| kind | 置き場 | 対象 | 終わり | 変わり方 | 定義 |
+| Kind | Bundle | Subject | End | Changes | Definition |
 | --- | --- | --- | --- | --- | --- |
-| `project` | `projectcontext/` | 期限と目標がある取り組み（開発・導入・個人のプロダクト） | ある | 議事録や作業のたびに積み上がり、決定が覆る | [project.md](project.md) |
-| `org` | `orgcontext/` | 方針・ルール・価値観・慣習 | 無い | 版の改訂で切り替わり、慣習は少しずつ変わる | [org.md](org.md) |
+| `project` | `projectcontext/` | An effort with goals and completion criteria | Yes | Work and discussions accumulate facts; decisions may be replaced | [project.md](project.md) |
+| `org` | `orgcontext/` | Policies, rules, values, and practices | No | Formal revisions and gradual changes in practice | [org.md](org.md) |
 
-## 見分け方
+## Selection criteria
 
-- **リポジトリの中身**: 議事録・要件・計画が中心なら project。規程・ガイドライン・方針が中心なら org
-- **終わりがあるか**: 完了の条件や締め切りがあるなら project。改訂はあっても完了が無いなら org
-- **よく聞かれる問いの形**: 「何に決まった」「誰が持っている」なら project。「なぜこのルールがある」「この場合にも当てはまるか」なら org
+- **Contents:** Minutes, requirements, and plans suggest project; policies and guidelines suggest org.
+- **Completion:** A deadline or completion condition suggests project. Continuing rules suggest org.
+- **Questions:** Decisions and ownership suggest project. Rationale and applicability of rules suggest org.
 
-手がかりが弱いときは、次の問いでユーザーに聞く。
+When evidence is weak, ask what questions the AI should answer, whether the effort has an end, and where facts come from.
 
-- この置き場から、AI にどんな問いに答えてほしいか
-- この取り組みに終わりはあるか
-- 事実は主にどこから入ってくるか（会議、文書の改訂、作業の記録）
+## When neither fits
 
-## どれにも合わないとき
+Start from the closest kind and record differences in the schema design. Propose adding a kind in the report; do not modify this builder's references during its execution.
 
-いちばん近い種類から始め、違う点を型の設計に書く。新しい種類として定義を足すかどうかは、報告で提案する。この skill の references は、実行中には書き換えない。
+## Kind definitions
 
-## 種類のファイルに書くこと
-
-対象、終わりと変わり方、よく問われること、拾うべき前提、資料の入り口、型の候補、正の置き場の例、取り込むときに気を付けること、起きやすい失敗。種類を足すときも、この並びで書く。
+Each definition covers subject, lifecycle, recurring questions, assumptions, source inputs, candidate types, authoritative sources, ingestion considerations, and common failures. Use the same structure for new kinds. Example questions and headings should be adapted to the target language.

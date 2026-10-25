@@ -1,92 +1,96 @@
-# 生成するもの
+# Generated artifacts
 
-```
+```text
 <repo>/
-  CLAUDE.md                        # 追記（下の「CLAUDE.md への追記」）
+  CLAUDE.md                         # Or AGENTS.md: a short entry
   <kind>context/
-    schema.yaml                    # 型・キー・語彙の正
-    index.md                       # context.py index が作る。手で書かない
-    tools/context.py               # この skill の scripts/context.py をそのまま写す
-    <dir>/<page>.md ...
+    schema.yaml                     # Types, keys, vocabularies, required headings
+    index.md                        # Generated; do not edit by hand
+    tools/context.py                # Unchanged copy from this skill
+    <dir>/<page>.md
   .claude/skills/<repo>-<kind>-context/
-    SKILL.md                       # 読み方・書き方の入り口
-    references/authoring.md        # 書き方の詳しい手順
+    SKILL.md                        # Reading and maintenance entrypoint
+    references/authoring.md          # Detailed authoring procedure
 ```
 
-`<kind>context/` はリポジトリの直下に置く。`context.py` は bundle の 1 つ上をリポジトリのルートとみなし、`inflows` や `sources[].resource` をそこから解く。
+Place the bundle directly under the repository root. The tool resolves source paths and inflow globs from the bundle's parent.
 
-ローカル skill の名前は、既定で `<リポジトリのディレクトリ名>-<kind>-context` にする。個人の `~/.claude/skills/` に同じ名前の skill があると、そちらが優先される。作る前に、自分の環境で名前が重なっていないかを確かめる。ほかの人の環境までは確かめられないので、リポジトリ名を頭に付けて重なりにくくする。
+Use the target repository's existing local-skill convention; the tree above illustrates Claude Code. For Codex, use `.agents/skills/` and `AGENTS.md` where appropriate. Default the skill name to `<repository-directory-name>-<kind>-context` and check for a conflicting installed skill where the environment exposes one.
 
-`schema.yaml` は [assets/schema.example.yaml](../assets/schema.example.yaml) から作る。写したら、先頭にある「この skill の references を見よ」というコメントは消す。生成先からは辿れないため。
+## Language and portability
+
+Use the language established during design confirmation for wiki prose, metadata descriptions, aliases, required section names, the generated maintenance skill, and agent guidance. Preserve machine keys, identifiers, and commands. Adapt every example below and in the schema asset to that language. Keep the generated skill self-contained: do not link back to builder references that will be unavailable after cloning.
+
+Create `schema.yaml` from the [example](../assets/schema.example.yaml), removing its first two builder-specific comments. Localize titles, descriptions, comments, and required headings before generating pages.
 
 ## context.py
 
-[scripts/context.py](../scripts/context.py) を `<kind>context/tools/` に写す。中身は書き換えない。リポジトリごとの違いは、すべて `schema.yaml` に書く。
+Copy [scripts/context.py](../scripts/context.py) unchanged into the bundle's `tools/` directory. Express repository differences in `schema.yaml`.
 
+```sh
+uv run <kind>context/tools/context.py index
+uv run <kind>context/tools/context.py audit
+uv run <kind>context/tools/context.py audit --report
 ```
-uv run <kind>context/tools/context.py index            # index.md を作り直す
-uv run <kind>context/tools/context.py audit            # FAIL があれば終了コード 1、schema の誤りは 2
-uv run <kind>context/tools/context.py audit --report   # 件数・未確認・置き換え済みを JSON で足す
-```
 
-`uv` が PyYAML を用意する。`uv` が無い環境では、PyYAML を入れた Python 3.11 以上で `python3 <kind>context/tools/context.py index` のように動かす。どちらで動かすかは手順 4 の承認で決め、ローカル skill と CLAUDE.md の追記に書く。
+`uv` supplies PyYAML. Without it, use a maintained Python 3.11+ installation with PyYAML and run `python3 <kind>context/tools/context.py ...`. Record the chosen commands in the generated skill. The CLI exits 1 for FAIL findings and 2 for a broken schema; `--report` adds JSON counts and lists.
 
-audit の検査（コード → 直し方）:
+Audit findings to explain in the generated skill:
 
-| 段階 | コード | 意味 |
+| Level | Code | Meaning |
 | --- | --- | --- |
-| FAIL | `frontmatter` | frontmatter が読めない |
-| FAIL | `missing-key` / `unknown-key` | 必須キーが無い / schema に無いキーがある |
-| FAIL | `unknown-dir` / `unknown-type` | schema に無いディレクトリ / そのディレクトリ（または束ねるファイル）の type と違う |
-| FAIL | `enum` / `date` / `filename` | 語彙に無い値（`sources[].kind` を含む） / 日付の形 / ファイル名の規則 |
-| FAIL | `missing-section` | 必須の節が無い |
-| FAIL | `broken-link` | 本文のリンク・`related`・`sources[].resource` の先が無い（コードの中のリンクは見ない） |
-| FAIL | `unknown-person` | 人物の値が `human:<id>` の形でない、または人物のファイルに無い |
-| FAIL | `verified` | `verified` が `{by: human:<id>, at: YYYY-MM-DD}` の形でない |
-| FAIL | `supersede` | 新旧の片方しか相手を指していない、または status が合わない |
-| FAIL | `alias-conflict` | 1 つの名前（題か別名）が 2 つのページを指す |
-| FAIL | `inflow` | 入り口のファイルがどこからも参照されていない（取り込み漏れ） |
-| FAIL | `index` | index.md が今のページと合わない |
-| WARN | `deferred` | `deferred` に書いた、まだ取り込んでいない入り口のファイル |
-| WARN | `stale` / `long-body` / `orphan` | `stale_after` を過ぎた / 本文が長い / どこからもリンクされていない |
+| FAIL | `frontmatter` | Unreadable frontmatter |
+| FAIL | `missing-key`, `unknown-key` | Missing requirement or undeclared key |
+| FAIL | `unknown-dir`, `unknown-type` | Directory or type not allowed by the schema |
+| FAIL | `enum`, `date`, `filename` | Invalid vocabulary, date, or filename |
+| FAIL | `source` | Source is not a mapping with nonempty string `kind` and `resource` |
+| FAIL | `missing-section` | Required heading absent |
+| FAIL | `broken-link` | Missing body-link, `related`, or source-file target |
+| FAIL | `unknown-person`, `verified` | Invalid person reference or verification mark |
+| FAIL | `supersede` | Missing reciprocal reference or inconsistent superseded status |
+| FAIL | `alias-conflict` | A title or alias identifies multiple pages |
+| FAIL | `inflow`, `index` | Unreferenced input or outdated index |
+| WARN | `deferred` | Input intentionally postponed |
+| WARN | `stale`, `long-body`, `orphan` | Review date passed, body too long, or page has no incoming link |
 
-## CLAUDE.md への追記
+## Agent guidance entry
 
-短く書く。中身はローカル skill に任せる。
+Keep it short and delegate detail to the maintenance skill. Adapt this English example to the target language and local skill invocation convention:
 
 ```markdown
 ## <kind>context
 
-このリポジトリの前提・経緯・決定は `<kind>context/` にある（AI 向けの置き場）。
-答える前・作業の前に `/<repo>-<kind>-context` で引き、会話で新しい事実が出たら同じ skill で書く。
+Repository assumptions, history, and decisions live in `<kind>context/`.
+Use the `<repo>-<kind>-context` skill before answering or working, and use
+its authoring workflow when new facts emerge from conversations or work.
 ```
 
-「新しい事実」の例を 2〜3 個、種類に合わせて添える（project なら「〜に決まった」「〜さんが担当になった」）。
+Add two or three relevant examples of new facts, such as decisions and ownership changes.
 
-## ローカル skill の SKILL.md
+## Maintenance skill: SKILL.md
 
-frontmatter の `description` には、読むときと書くときの両方の言い回しを入れる（「〜はどうなった」「〜に決まったので残して」）。本文に書く節は次のとおり。
+Include reading and writing triggers in its description, expressed in the target language. Cover:
 
-1. **位置づけ**: 置き場は AI 向けであること。人が読む文書との分担。型の正は `schema.yaml`
-2. **型の表**: ディレクトリ × type × 更新の仕方
-3. **正の置き場の表**: [ontology-design.md](ontology-design.md) §8 で決めたもの
-4. **読み方**: `index.md` の題・別名・要約から当たりを付け、ページを読み、必要ならリンクを 1 段だけたどる。`status` が `superseded` のページは、後継を読む。`verified` の無いページを根拠にするときは、その旨を答えに添える。index に無ければ元の資料から答え、その場でページを起こす
-5. **書き方**: `references/authoring.md` へのリンク
-6. **自分で書き足してよい範囲**: 会話や作業で分かった事実は、頼まれなくても書く。書かないものは、型や schema の変更（ユーザーに提案する）、`verified` の付与（頼まれて代わりに書く場合を除く）、人が読む文書の書き換え
-7. **検査**: 上の audit のコマンドと、コードごとの直し方
+1. Purpose, the boundary with human-facing documents, and `schema.yaml` as the authority for types.
+2. Directory, type, and update-protocol table; authoritative-source table from the approved design.
+3. Reading: search index titles, aliases, and descriptions; read matching pages and follow one link when needed. Follow successors of superseded pages. Disclose unverified evidence. If the index lacks an answer, consult original sources and capture the resulting facts.
+4. Authoring: link to the self-contained `references/authoring.md` generated below.
+5. Autonomy: maintain supported facts in the chosen language within the approved schema. Propose schema changes; add verification marks only on explicit instruction. Update human-facing documents only when authorized by the agreed propagation policy.
+6. Validation commands and how to resolve audit findings.
 
-## 書き方の手順（references/authoring.md）
+## Authoring reference
 
-1. **重なりの確認**: index を見て、同じ概念のページがあれば新しく作らずに直す
-2. **置き場所の判定表**: 何を 1 ページにし、何を束ねたファイルに足し、何を作らないか（会議そのもの、人が読む文書に正がある事実、自分が分かっていないこと）
-3. **frontmatter の雛形**: type ごとに、そのまま写して埋められる形にする。`generated` には、書いたときに動いていたモデルと skill の名前を `<モデル>/<skill 名>` の形で入れ、日付を添える。雛形の中ではモデルを `<モデル>` のまま残す。YAML の値に「空白と #」が続く箇所があればコメントと読まれるので、値を引用符でくくる
-4. **別名の付け方**: 表記の揺れ・略称・旧名・相手側の呼び方・文字起こしの聞き違い。名前がぶつかったときに、どちらに残すかの決まり
-5. **type ごとの決まり**: 種類のファイルの「取り込むときに気を付けること」を、このリポジトリの型に合わせて書く
-6. **出典の書き方**: `sources` の `kind` の選び方。`resource` はファイルのパスそのものにし、位置は別のキーに書く（取り込み漏れの判定がパスの一致で見るため）。資料どうしが食い違うときは、両方を出典に挙げ、本文に食い違いを書く
-7. **人が読む文書への反映**: `rendered_in` を付けたページを直したら、文書側も直す（直すかどうかをリポジトリの方針で決める）
-8. **仕上げ**: index → audit で FAIL を 0 にし、変更をコミットメッセージの案と一緒に報告する。取り込みを後回しにした入り口のファイルは `deferred` に書き、報告に挙げる
+Generate `references/authoring.md` with:
 
-## 変更の履歴とコミットメッセージ
+1. **Deduplication:** Consult the index before adding a concept; update existing pages when appropriate.
+2. **Placement:** Explain pages versus collections and exclusions: meetings themselves, facts owned by human-facing documents, and research gaps.
+3. **Frontmatter templates:** Provide a usable template per type with localized headings and prose. Record the active model and skill as `<model>/<skill-name>` plus date in `generated`; leave the model placeholder unfilled in templates. Quote YAML values containing comment-sensitive text such as a space followed by `#`.
+4. **Aliases:** Explain spelling variants, abbreviations, former names, external vocabulary, transcription errors, and conflict resolution.
+5. **Type rules:** Adapt the selected kind's ingestion guidance to the approved schema.
+6. **Evidence:** Choose source kinds, keep resource paths separate from locations, and cite both sides of contradictory evidence.
+7. **Propagation:** For pages with `rendered_in`, apply the agreed policy for updates to human-facing documents.
+8. **Completion:** Run index then audit, require zero FAIL findings, list postponed inputs in `deferred`, and report changes with a proposed commit message.
 
-- 履歴は `git log -- <kind>context/` と `git log --follow <kind>context/<dir>/<page>.md` で引く。`log.md` は作らない
-- コミットメッセージには、意味のある変更（起こしたページ、直した事実、覆った決定）を書く。誤字の修正などは並べない
+## History
+
+Use `git log -- <kind>context/` and `git log --follow <kind>context/<dir>/<page>.md`. Do not generate a separate `log.md`. Proposed commit messages should describe meaningful fact or decision changes rather than listing incidental spelling edits.

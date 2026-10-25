@@ -1,58 +1,49 @@
-# org
+# Organizational context
 
-## 対象
+## Subject and lifecycle
 
-方針・ルール・価値観・慣習。会社やチームのものだけでなく、個人の作業の決まりや、家族や小さな団体の取り決めも含む。
+Policies, rules, values, and practices for organizations, teams, individuals, families, or small groups. There is no completion event. Formal revisions replace rules; practices evolve gradually. Suitable `stale_after` dates include revisions, effective dates, and scheduled reviews.
 
-## 終わりと変わり方
+## Recurring questions
 
-終わりは無い。ルールは版の改訂でまとめて変わり、慣習は少しずつ変わる。`stale_after` に使える日付は、改定・施行・見直しの予定日。
+- Why does this rule exist, and what does it protect?
+- Does it apply here, and is there a relevant precedent?
+- Which practices are unwritten?
+- Who can interpret or revise the rule?
 
-## よく問われること
+## Assumptions to capture
 
-- このルールはなぜある。何を守るためか
-- この場合にも当てはまるか。前に似た判断はあったか
-- 明文化されていない決まりは何か
-- 誰に聞けば判断してもらえるか
+Intent and applicability boundaries, previous interpretations and their reasoning, the distinction between practice and formal policy, and revision authority or contacts.
 
-## 拾うべき前提
+## Source inputs
 
-- ルールの意図と、当てはまる範囲の境目
-- 過去の解釈と、その理由
-- 慣習であって正式な決まりではない、という区別
-- 改定できる人と相談先
+Inside the repository: regulations, guidelines, policies, and revisions. Outside it: consultations and conversations; ask where to find them.
 
-## 資料の入り口
+## Candidate types
 
-- リポジトリの中: 規程・ガイドライン・方針の文書と、その改訂
-- リポジトリの外: 相談のやりとり、会話（場所はユーザーに聞く）
-
-## 型の候補
-
-| 更新の仕方 | 候補 | 必須にしたいもの |
+| Update behavior | Candidates | Useful requirements |
 | --- | --- | --- |
-| 書き換え | 原則・価値観 | 節「何を優先するか」「生まれた背景」 |
-| 書き換え | ルールの背景（文書の節ごと） | 対象の節へのリンク、節「意図」「当てはまる範囲」 |
-| 書き換え | 慣習 | 正式な決まりでないことを示すキー、節「守られている範囲」 |
-| 書き換えず後継 | 解釈と先例 | 節「問われたこと」「判断」「理由」、`decided_at` `decided_by` |
-| 書き換え（束ねる） | 用語、相談先 | — |
+| Overwrite | Principles and values | Priorities and background sections |
+| Overwrite | Background of individual policy sections | Link to the section, intent and applicability sections |
+| Overwrite | Practices | Explicit indication that they are informal; scope of observed practice |
+| Preserve with successor | Interpretations and precedents | Question, judgment, and rationale sections; `decided_at`, `decided_by` |
+| Overwrite, collected | Terms and contacts | As needed |
 
-## 正の置き場の例
+Section names above are examples to express in the selected output language.
 
-| 事実 | 正 |
+## Authoritative sources
+
+| Fact | Authority |
 | --- | --- |
-| 規程や方針の本文 | 元の文書（置き場は節へのリンクだけを持つ） |
-| 改訂の履歴 | Git の履歴、文書の改訂表 |
-| ルールの背景・意図・範囲・先例 | この置き場 |
-| 明文化されていない慣習 | この置き場（明文化されたら文書に移し、リンクだけにする） |
+| Policy wording | Original document; wiki links to the relevant section |
+| Revision history | Git or document revision table |
+| Rationale, intent, scope, precedents | Wiki |
+| Unwritten practices | Wiki; replace with a link when formalized elsewhere |
 
-## 取り込むときに気を付けること
+## Ingestion considerations
 
-- 初回は、規程の目次から節ごとの背景のページを起こし、そのあと相談の記録から先例を拾う
-- 文書に根拠があれば正式なルール、無ければ慣習として分けて書く
-- 文書が改訂されたら、その節を出典にしているページを洗い出し、背景と先例がまだ成り立つかを見直す
+Start from the policy table of contents to create background pages by section, then extract precedents from consultation records. Distinguish documented rules from practices without a formal source. After a policy revision, review pages citing the affected sections to see whether their rationale and precedents still apply.
 
-## 起きやすい失敗
+## Common failures
 
-- 規程の本文を写してしまい、改訂のたびにずれる
-- 慣習を正式なルールのように書いてしまう
+Copying policy text that then drifts from the original, or presenting informal practices as formal rules.

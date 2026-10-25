@@ -1,45 +1,40 @@
-# 手順の詳しいところ
+# Workflow checklists
 
-[SKILL.md](../SKILL.md) の手順 1・4・7 で使う一覧。
+Use these with the corresponding steps in [SKILL.md](../SKILL.md).
 
-## 調査（手順 1）
+## Investigation
 
-- Git の状態（今のブランチ、未コミットの変更）。他の作業の途中なら、作業ブランチをどうするかを手順 4 で聞く
-- README・議事録・計画や方針の文書・コード・既存の `CLAUDE.md` / `AGENTS.md`・`.claude/skills/`・`.claude/rules/`
-- 人が読む文書の実際の置き場（`docs/` とは限らない）
-- 種類を見分ける手がかり（[context-kinds/README.md](context-kinds/README.md)）
-- 繰り返し問われる事実と、人が言わなくても分かっている前提
-- 資料の入り口ごとの置き場所。リポジトリの外の入り口は推測せず、ユーザーに聞く
-- 入り口を作っている既存の手順（議事録を作る skill など）があるか。つなぐかどうかは、手順 4 で選択肢として見せる
-- すでにある知識の置き場（Issue、`.claude/` の下のメモ、`CLAUDE.md` の教訓）。重なる事実の正をどちらにするかを、手順 3 で決める
-- 外部の知識源への依存（ほかのリポジトリの文書など）
-- `uv` があるか。無ければ、PyYAML を入れた Python 3.11 以上があるか（`context.py` の実行に使う）
+- Check the branch and uncommitted changes. Resolve any branch choice during design confirmation if other work is in progress.
+- Read README files, minutes, plans, policies, code, agent guidance, local skills, and rules. Find the actual location of human-facing documents.
+- Identify recurring questions, implicit assumptions, and evidence for the [context kind](context-kinds/README.md).
+- Establish the output language from explicit user instructions, then repository rules and existing documents. Ask if unclear.
+- Locate source inputs and any workflows that produce them. Ask about external locations; offer workflow integration during design confirmation.
+- Identify overlapping knowledge stores and external dependencies; decide which source owns each fact during schema design.
+- Check for `uv`, or Python 3.11+ with PyYAML, to run `context.py`.
 
-ファイルが多いときは、観点を分けて手分けして読む。個人の評価や人事に関わる内容は、拾わない。
+Do not collect personnel evaluations or other HR-sensitive information.
 
-## 承認（手順 4）
+## Design confirmation
 
-次をまとめて見せ、承認を取る。
+Present these together before generation:
 
-- 種類と、その根拠。種類のファイルから外れた点があれば、その理由
-- ディレクトリ × type × 更新の仕方の表
-- type ごとの必須キーと、あってよいキー
-- 正の置き場の表と、人が読む文書と重なる事実の扱い
-- `schema.yaml` の全文（下書き）
-- 作るファイルのパスの一覧（`schema.yaml`、`tools/context.py`、ローカル skill、`CLAUDE.md` の追記箇所）
-- `context.py` の動かし方（`uv` か、PyYAML を入れた Python か）
-- 入り口を作っている既存の手順があれば、ローカル skill からそれにつなぐかどうか
-- 最初に取り込む資料と、後回しにする資料
-- 作業するブランチ（手順 1 で気になる点があったとき）
+- Kind and rationale, including departures from its definition.
+- Output language and the conventions supporting it.
+- Directory, type, and update-protocol table; required and optional keys and sections.
+- Authoritative-source table and the policy for overlap with human-facing documents.
+- Complete draft `schema.yaml`, with prose and required headings adapted to the selected language.
+- Generated paths: bundle, tool, maintenance skill, and additions to agent guidance.
+- Runtime choice: `uv`, or Python with PyYAML. Record the commands in the local skill; keep the agent-guidance entry short.
+- Proposed integrations with existing source-producing workflows.
+- Sources to ingest now and those to defer.
+- Working branch, if investigation identified a choice to resolve.
 
-## 報告（手順 7）
+## Report
 
-- 作ったファイルの一覧
-- 種類と型の設計の要約。手順 4 から変えた点があれば、その理由
-- 起こしたページの件数を type ごとに（`audit --report` の `counts` を写す）
-- 未取り込みの資料と、あとで取り込むときの頼み方
-- audit の結果（WARN の要点）
-- 人が確かめて `verified` を付けるやり方
-- 作業ブランチと、commit・PR の進め方の案。コミットメッセージの案を添える
-- どの種類にも合わなかった場合は、新しい種類の定義を足す提案
-- 人に確かめたいことの件数。手順 8 に進むかを聞く
+- List generated files and summarize the kind, language, and schema. Explain departures from the approved design.
+- Copy per-type page counts from `audit --report`.
+- List deferred sources, how to request their ingestion, and remaining audit warnings.
+- Explain human verification and how to request `verified` marks.
+- Report the branch and suggest a commit message and next steps for commit or PR creation, respecting any existing authorization.
+- If no kind fit, propose a new kind definition.
+- State how many questions need human confirmation and offer the optional verification step.

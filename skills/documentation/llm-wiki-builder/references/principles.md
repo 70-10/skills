@@ -1,30 +1,30 @@
-# LLM wiki の原則
+# LLM wiki principles
 
-この置き場は AI エージェントのためのもので、人が読む `docs/` や README の代わりではない。書式は [Open Knowledge Format](https://github.com/GoogleCloudPlatform/open-knowledge-format) に寄せる。概念ごとに Markdown を 1 つ作り、YAML の frontmatter に種類・題・要約・出典を書き、ページどうしを相対リンクで結ぶ。
+The wiki serves AI agents alongside human-facing documents such as README files. Use one Markdown page per concept, YAML frontmatter for type, title, description, and sources, and relative links between pages.
 
-下の原則は出発点にすぎない。対象のリポジトリに合わないものは外し、外した理由を `schema.yaml` のコメントに残す。
+These principles are defaults. Adapt them to the target repository and explain departures in schema comments.
 
-## 置き場の形
+## Structure
 
-- **分け方の軸は「どう更新されるか」。** 書き換えてよいページ、書き換えずに後継を立てるページ、状態が進むページは、書き方も検査も違う。題材ごとに分けたくなっても、まず更新のされ方で分ける
-- **ページを増やしすぎない。** 状態も後継も固有の出典も持たないもの（人物、短い用語）は、1 つのファイルに `## <id>` で並べる。ページの数は、そのまま index の長さと探す手間になる
-- **index.md は生成する。** frontmatter から `context.py index` で作り直す。手で保守する目次は必ず古くなる
-- **type の語彙は schema.yaml で閉じる。** 新しい type を使うには schema.yaml を直す必要がある。この手間があるので、似た type が増えにくい
-- **ファイル名は英小文字とハイフンだけ。** 日本語の名前は `title` と `aliases` が持つ
+- **Organize by update behavior.** Mutable facts, decisions preserved through successors, and evolving questions need different authoring rules and checks.
+- **Keep the page count useful.** Group people and short terms without independent status, successors, or sources under `## <id>` headings in collection files.
+- **Generate the index.** Rebuild `index.md` from frontmatter with `context.py index`.
+- **Close the type vocabulary.** New types require an explicit schema change.
+- **Use lowercase ASCII letters, digits, and hyphens in page basenames.** Keep names in the target language in `title` and `aliases`.
 
-## 書くとき
+## Authoring
 
-- **長い説明は写さずリンクする。** ページ側に置く要約は `description` の 1 行まで。議事録や規程の文章を貼ると、元の資料が直ったときに置き場だけ古くなる
-- **見つけてもらえるかは別名しだい。** 略称・旧名・相手側の呼び方・表記の揺れを `aliases` に並べる。同じ名前が 2 つのページに付いていたら、audit が止める
-- **AI の記入と人の確認を区別する。** `generated` は AI が書く。`verified` は人が中身を確かめた印なので、AI は人に頼まれたときだけ代わりに書く
-- **決定は上書きしない。** 覆った決定は残し、status を `superseded` にして、新旧を `superseded_by` と `supersedes` で互いに指す
-- **担当が替わったら失われるものを、必須の項目にする。** 結論そのものより、選んだ理由・見送った案・前提が崩れる条件のほうが、後から辿れなくなりやすい
-- **`stale_after` には実在する日付だけを使う。** 期限・交代・改定のような、カレンダーに載る日。目安で付けた日付が並ぶと、この欄は読まれなくなる
-- **ほかに正があることは短く指すだけにする。** 一般的な知識や別の置き場が持つ事実は、1 行の要約とリンクにとどめる
+- **Link instead of copying long explanations.** Keep the source summary to one `description` line; copied minutes and policy text drift from their originals.
+- **Make facts discoverable.** Record abbreviations, former names, external terminology, and spelling variants as aliases. Conflicting names fail audit.
+- **Distinguish AI authoring from human review.** AI writes `generated`; add `verified` only when a person has confirmed the page and requested the mark.
+- **Preserve decisions.** Mark replaced decisions `superseded` and connect old and new pages with reciprocal `superseded_by` and `supersedes` references.
+- **Require what a handover would lose.** Capture reasons, rejected alternatives, and conditions that invalidate decisions.
+- **Use actual dates for `stale_after`.** Deadlines, handovers, and scheduled reviews are useful; arbitrary expiry dates are not.
+- **Respect existing authoritative sources.** Summarize and link facts owned elsewhere.
 
-## 手入れ
+## Maintenance
 
-- **取り込み漏れは audit で見つける。** 議事録などの入り口のファイルが、どのページからも参照されていなければ FAIL にする。後回しにすると決めたファイルは `deferred` に書き、WARN として残す
-- **答えに使った資料は、その場でページにする。** index に無いことを元の資料から答えたら、そのままページを起こす。使うたびに置き場が埋まっていく
-- **未決の論点と、自分の分からないことは置き場所を変える。** 当事者が決める論点は置き場に置く。情報の場所や仕様の理由のような「自分が知らないこと」は Issue などで追う
-- **履歴は Git が持つ。** `log.md` は作らない。`git log -- <kind>context/` と `git log --follow <ファイル>` で足り、ブランチごとの追記がぶつかることも無い
+- **Audit ingestion coverage.** Unreferenced source files fail audit. Intentionally postponed sources belong in `deferred` and produce warnings.
+- **Capture sources used to answer questions.** When an answer requires material absent from the index, create the corresponding page as part of the authorized maintenance work.
+- **Separate open decisions from research gaps.** Stakeholder questions belong in the wiki; gaps in the agent's understanding belong in Issues or the report.
+- **Use Git for history.** Use `git log -- <kind>context/` and `git log --follow <file>`, not a separate `log.md`.

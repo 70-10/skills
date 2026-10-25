@@ -107,8 +107,12 @@ def load_schema(root: Path) -> dict:
     if missing:
         raise SchemaError(f"{path}: missing keys {sorted(missing)}")
 
-    lists = [(k, schema[k]) for k in TOP_LISTS if k in schema]
-    lists += [(f"enums.{k}", v) for k, v in (schema.get("enums") or {}).items()]
+    for section in ("dirs", "types", "collections", "common", "enums"):
+        if section in schema and not isinstance(schema[section], dict):
+            raise SchemaError(f"{path}: {section} must be a mapping")
+
+    string_lists = [(k, schema[k]) for k in TOP_LISTS if k in schema]
+    enum_lists = [(f"enums.{k}", v) for k, v in (schema.get("enums") or {}).items()]
     specs = [("common", "", schema.get("common") or {})]
     specs += [(section, f".{name}", spec) for section in ("dirs", "collections", "types")
               for name, spec in (schema.get(section) or {}).items()]
@@ -119,15 +123,29 @@ def load_schema(root: Path) -> dict:
         unknown = set(spec) - NESTED_KEYS[section]
         if unknown:
             raise SchemaError(f"{path}: {where} has unknown keys {sorted(unknown)}")
-        lists += [(f"{where}.{k}", v) for k, v in spec.items() if k not in ("protocol", "type", "enums")]
-        lists += [(f"{where}.enums.{k}", v) for k, v in (spec.get("enums") or {}).items()]
+        string_lists += [(f"{where}.{k}", v) for k, v in spec.items() if k not in ("protocol", "type", "enums")]
+        if "enums" in spec and not isinstance(spec["enums"], dict):
+            raise SchemaError(f"{path}: {where}.enums must be a mapping")
+        enum_lists += [(f"{where}.enums.{k}", v) for k, v in spec.get("enums", {}).items()]
         if section == "dirs" and not spec.get("types"):
             raise SchemaError(f"{path}: {where} needs types")
-    for where, value in lists:
+    for where, value in string_lists + enum_lists:
         if not isinstance(value, list):
             raise SchemaError(f"{path}: {where} must be a list, like [a, b]")
+    for where, value in string_lists:
+        if not all(isinstance(item, str) for item in value):
+            raise SchemaError(f"{path}: {where} must contain strings")
     if schema.get("person_keys") and not schema.get("people"):
         raise SchemaError(f"{path}: person_keys needs people (the collection that lists the ids)")
+    if "filename" in schema:
+        try:
+            re.compile(schema["filename"])
+        except (TypeError, re.error) as exc:
+            raise SchemaError(f"{path}: invalid filename regex: {exc}") from exc
+    if "max_body_lines" in schema:
+        limit = schema["max_body_lines"]
+        if type(limit) is not int or limit < 0:
+            raise SchemaError(f"{path}: max_body_lines must be a nonnegative integer")
     return schema
 
 
@@ -301,7 +319,10 @@ def _check_page(run: _Run, p: Page) -> None:
     schema = run.bundle.schema
     meta = p.meta
     ptype = meta.get("type")
-    rules = run.rules.get(ptype) or run.rules[None]
+    if not isinstance(ptype, str):
+        run.fail(p.rel, "unknown-type", "type must be a string")
+        ptype = None
+    rules = run.rules.get(ptype, run.rules[None])
     collections = schema.get("collections") or {}
     dirs = schema["dirs"]
 
@@ -360,9 +381,13 @@ def _check_page(run: _Run, p: Page) -> None:
         run.linked.add(target)
     source_kinds = schema.get("source_kinds") or []
     for src in _as_list(meta.get("sources")):
-        if not isinstance(src, dict):
+        if not isinstance(src, dict) or any(
+            not isinstance(src.get(key), str) or not src[key].strip()
+            for key in ("kind", "resource")
+        ):
+            run.fail(p.rel, "source", "each source must have nonempty string kind and resource values")
             continue
-        target = _resolve(repo, repo, str(src.get("resource") or "").lstrip("/"))
+        target = _resolve(repo, repo, src["resource"].lstrip("/"))
         if target is not None:
             if not run.is_file(target):
                 run.fail(p.rel, "broken-link", f"sources[].resource {src['resource']} does not exist")
@@ -370,6 +395,8 @@ def _check_page(run: _Run, p: Page) -> None:
         if source_kinds and src.get("kind") not in source_kinds:
             run.fail(p.rel, "enum", f"sources[].kind: {src.get('kind')!r} is not one of {source_kinds}")
 
+    if meta.get("status") == "superseded" and not meta.get("superseded_by"):
+        run.fail(p.rel, "supersede", "superseded status requires a superseded_by reference")
     if meta.get("superseded_by") and meta.get("status") != "superseded":
         run.fail(p.rel, "supersede", "superseded_by is set but status is not 'superseded'")
     for key, back_key in (("superseded_by", "supersedes"), ("supersedes", "superseded_by")):

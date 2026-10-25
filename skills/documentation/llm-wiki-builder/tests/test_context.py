@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import yaml
 
 HERE = Path(__file__).resolve().parent
 SCRIPT = HERE.parent / "scripts" / "context.py"
@@ -319,3 +320,74 @@ def test_broken_schema_is_rejected(wiki, old, new):
     with pytest.raises(ctx.SchemaError):
         ctx.load(wiki)
     assert ctx.main(["--root", str(wiki), "audit"]) == 2
+
+
+# ---- target-language content (Unicode escapes keep maintained examples in English)
+
+
+def test_localized_content_and_schema_headings(wiki):
+    title = "\u30b7\u30b9\u30c6\u30e0A"
+    alias = "\u8acb\u6c42"
+    description = "\u8acb\u6c42\u3092\u51e6\u7406\u3059\u308b"
+    context_heading = "\u80cc\u666f"
+    decision_heading = "\u6c7a\u5b9a"
+    edit(wiki / "schema.yaml", "title: Example wiki", "title: " + title)
+    edit(wiki / "schema.yaml", "sections: [Context, Decision]",
+         f"sections: [{context_heading}, {decision_heading}]")
+    system = wiki / "entities" / "system-a.md"
+    edit(system, "title: System A", "title: " + title)
+    edit(system, "aliases: [billing]", f"aliases: [{alias}]")
+    edit(system, "description: The billing system that the project connects to.",
+         "description: " + description)
+    edit(system, "System A sends invoices.", description)
+    decision = wiki / "decisions" / "adopt-queue.md"
+    edit(decision, "## Context", "## " + context_heading)
+    edit(decision, "## Decision", "## " + decision_heading)
+    assert findings(wiki) == []
+    index = (wiki / "index.md").read_text(encoding="utf-8")
+    assert f"# {title}" in index
+    assert f"| system | {title} | {alias} | {description} |" in index
+    edit(decision, "## " + decision_heading, "## Decision")
+    assert "missing-section" in codes(wiki, "FAIL")
+
+
+@pytest.mark.parametrize("section", ["dirs", "types", "collections", "common", "enums"])
+def test_schema_sections_must_be_mappings(wiki, section):
+    path = wiki / "schema.yaml"
+    schema = yaml.safe_load(path.read_text(encoding="utf-8"))
+    schema[section] = ["invalid"]
+    path.write_text(yaml.safe_dump(schema), encoding="utf-8")
+    assert ctx.main(["--root", str(wiki), "audit"]) == 2
+
+
+@pytest.mark.parametrize("source", ["minutes", "{}", "{kind: minutes}",
+                                   "{resource: meeting-minutes/2026-01-05.md}",
+                                   "{kind: minutes, resource: []}",
+                                   "{kind: '', resource: ' '}"])
+def test_malformed_source_fails_audit(wiki, source):
+    edit(wiki / "entities" / "system-a.md",
+         "{kind: minutes, resource: meeting-minutes/2026-01-05.md}", source)
+    assert "source" in codes(wiki, "FAIL")
+    assert ctx.main(["--root", str(wiki), "audit"]) == 1
+
+
+@pytest.mark.parametrize("old,new", [
+    ("    sections: [Context, Decision]", "    sections: [Context, Decision]\n    enums: [invalid]"),
+    ("filename: '^[a-z0-9][a-z0-9-]*\\.md$'", "filename: '['"),
+    ("max_body_lines: 40", "max_body_lines: invalid"),
+    ("date_keys: [decided_at, stale_after]", "date_keys: [[decided_at]]"),
+])
+def test_schema_values_are_validated_before_use(wiki, old, new):
+    edit(wiki / "schema.yaml", old, new)
+    assert ctx.main(["--root", str(wiki), "audit"]) == 2
+
+
+@pytest.mark.parametrize("value", ["[system]", "{name: system}"])
+def test_non_string_page_type_fails_audit(wiki, value):
+    edit(wiki / "entities" / "system-a.md", "type: system", "type: " + value)
+    assert "unknown-type" in codes(wiki, "FAIL")
+
+
+def test_superseded_status_requires_a_successor(wiki):
+    edit(wiki / "decisions" / "adopt-queue.md", "status: active", "status: superseded")
+    assert "supersede" in codes(wiki, "FAIL")

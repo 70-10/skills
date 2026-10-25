@@ -1,60 +1,55 @@
-# project
+# Project context
 
-## 対象
+## Subject and lifecycle
 
-期限と目標がある取り組み。仕事の案件だけでなく、個人のプロダクト・研究・長く続く趣味の開発も含む。
+An effort with goals and completion criteria: work projects, personal products, research, or ongoing hobby development. Its context ends when the effort ends. Facts accumulate through work and discussion; decisions can be replaced. Suitable `stale_after` dates include deadlines, handovers, and scheduled reviews.
 
-## 終わりと変わり方
+## Recurring questions
 
-取り組みが終われば役目も終わる。事実は作業や話し合いのたびに積み上がり、決定は覆ることがある。`stale_after` に使える日付は、締め切り・担当の交代・見直しの予定日。
+- What happened, what was decided, and why?
+- Who owns this or can answer questions?
+- What remains undecided?
+- What does this term mean, and what does this component connect to?
 
-## よく問われること
+## Assumptions to capture
 
-- 〜はどうなった。何に決まった。なぜそうした
-- 誰が持っている。誰に聞けばよい
-- まだ決まっていないことは何か
-- この言葉は何を指すか。この部品はどこにつながるか
+Decision rationale, rejected alternatives, invalidating conditions and external constraints, terminology variants, ownership, and decision authority.
 
-## 拾うべき前提
+## Source inputs
 
-- 決定の理由と、選ばなかった案
-- 決定が崩れる条件（前提にしている外部の都合・期限）
-- 呼び方の揺れ（略称・旧名・相手側の呼び方）
-- 担当と、判断できる人
+Inside the repository: minutes, plans, requirements, Issues, PRs, and commits. Outside it: chats and user conversations; ask where to find them.
 
-## 資料の入り口
+## Candidate types
 
-- リポジトリの中: 議事録、計画や要件の文書、Issue と PR、コミット
-- リポジトリの外: チャット、ユーザーとの会話（場所はユーザーに聞く）
-
-## 型の候補
-
-| 更新の仕方 | 候補 | 必須にしたいもの |
+| Update behavior | Candidates | Useful requirements |
 | --- | --- | --- |
-| 書き換え | システム、部品、用語、人物（束ねる） | 部品なら上流と下流 |
-| 書き換えず後継 | 決定 | 節「決めたこと」「理由と却下した案」「崩れる条件」、`decided_at` `decided_by` |
-| 状態が移る | 未決の論点、仮説 | `status`、解決したら `resolved_by` |
+| Overwrite | Systems, components, terms, collected people | Upstream and downstream dependencies for components |
+| Preserve with successor | Decisions | Decision, rationale and rejected alternatives, invalidating conditions; `decided_at`, `decided_by` |
+| Status transition | Open questions, hypotheses | `status`, then `resolved_by` when settled |
 
-## 正の置き場の例
+Section names above are examples to express in the selected output language.
 
-| 事実 | 正 |
+## Authoritative sources
+
+| Fact | Authority |
 | --- | --- |
-| 会議での発言と経緯 | 議事録（置き場は `sources` で指すだけ） |
-| 決定・担当・未決の論点・用語 | この置き場 |
-| 目標・予定・リスク | 計画の文書や README |
-| タスクと進み具合 | Issue（置き場はタスクを持たない） |
+| Statements and discussion history | Minutes, referenced through `sources` |
+| Decisions, ownership, open questions, terminology | Wiki |
+| Goals, schedule, risks | Plan or README |
+| Tasks and progress | Issues; do not duplicate task tracking |
 
-## 取り込むときに気を付けること
+## Ingestion considerations
 
-- 初回は、全体が分かる README や計画から基礎のページ（システム・人物・用語）を起こし、そのあと議事録を古い順に読む
-- 迷ったら決定ではなく論点にする。「〜したい」「〜でどうか」は提案であり、関係する人がそろって受け入れた記録があって初めて決定になる
-- 新しい決定ができたら、前の決定との関係を 1 つに決める
-  - 前の決定に書いた結論が、もう正しくない → 後継として結ぶ（`superseded_by` / `supersedes`）
-  - 前の決定はそのまま正しく、条件や範囲が増えただけ → 別の決定として立て、`related` で指す
-  - 前の決定が「試してから選ぶ」と言っていて、その結果が出た → これも `related`。予定どおりに進んだのであって、覆ったのではない
+Start with README files and plans to establish systems, people, and terms; then process minutes chronologically.
 
-## 起きやすい失敗
+Treat ambiguous statements as open questions. Wishes and proposals become decisions only with evidence of acceptance by the relevant people.
 
-- 議事録の要約を、ページに写してしまう
-- タスクの一覧を持ってしまい、Issue とずれる
-- 決定の理由を書かず、「何に決まったか」だけを残す
+Classify each new decision's relationship to earlier ones:
+
+- A previous conclusion no longer holds: use reciprocal supersession links.
+- The previous conclusion still holds with additional scope or conditions: create a separate decision and use `related`.
+- A planned experiment produces its result: use `related`; following the plan does not supersede it.
+
+## Common failures
+
+Copying summaries of minutes, duplicating task lists, and recording conclusions without their rationale.
