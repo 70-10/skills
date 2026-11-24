@@ -31,6 +31,18 @@ npx skills add /path/to/repository --skill '*' --agent codex --copy --yes
 - All 17 files bundled with `llm-wiki-builder`, including references, assets, scripts, tests, and fixtures, were installed byte-identically for both agents.
 - Both installations ran under a newly created `/tmp` root. They did not write to this repository or any global agent skill directory.
 
+## land discovery verification
+
+Verified on 2026-11-24 with `skills` CLI 1.9.0, after adding `land`. Only discovery was run:
+
+```sh
+npx skills add . --list
+```
+
+- Discovery returned eleven skills: `adr`, `align`, `brief`, `discover`, `elaborate`, `first-bet`, `investigate`, `land`, `llm-wiki-builder`, `refine`, and `tdd`.
+- The project installation checks for Claude Code and Codex were not run for this change. The installation results above cover the ten skills before `land` was added.
+- `land` passed the skill-creator frontmatter and structure validator.
+
 ## llm-wiki-builder bundle verification
 
 Run the bundled tests with explicit dependencies on the minimum supported series and a newer maintained series:
