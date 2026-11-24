@@ -13,7 +13,7 @@ Reusable [Agent Skills](https://agentskills.io/) for decision documentation, str
 | `elaborate` | Clarify purpose, scope, success criteria, and constraints through dialogue |
 | `first-bet` | Choose the first hypothesis worth testing when the answer is unclear |
 | `investigate` | Establish what is actually true about an existing subject from primary sources, including the root cause of an observed phenomenon |
-| `land` | Carry an agreed specification through an isolated worktree to an opened pull request, then remove the worktree |
+| `land` | Carry an agreed specification or design through an isolated worktree to an opened pull request, then remove the worktree |
 | `llm-wiki-builder` | Create an LLM wiki with a repository-local skill for maintaining knowledge, schemas, indexes, and audits |
 | `refine` | Refine a GitHub Issue so a subsequent agent can autonomously investigate, design, implement, and verify the work |
 | `tdd` | Drive an implementation test-first, keeping the resulting tests free of gaps and duplicates |
