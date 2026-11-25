@@ -9,6 +9,7 @@ Reusable [Agent Skills](https://agentskills.io/) for decision documentation, str
 | `adr` | Record every identifiable decision from the current session, code, and documentation as self-contained ADRs |
 | `align` | Identify the subject to address and continue with the appropriate thinking workflow |
 | `brief` | Produce an approved, self-contained implementation specification |
+| `diagram` | Explain a PR, design decision, or trade-off with a short summary and a browser-verified HTML diagram |
 | `discover` | Build an evidence-based understanding of an identified question or problem |
 | `elaborate` | Clarify purpose, scope, success criteria, and constraints through dialogue |
 | `first-bet` | Choose the first hypothesis worth testing when the answer is unclear |
