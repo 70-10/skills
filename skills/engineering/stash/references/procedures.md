@@ -13,7 +13,7 @@ Resolve task paths from the target project's root. Treat a name as one filename 
 
 1. Find the named task or list active stashes and ask which one to resume. If the task does not exist, report that and stop.
 2. Read the task and brief the user on its purpose, decisions, progress, next action, recommended skills, and caveats. If the session index exists, mention the relevant entries as pointers. Read only project files directly relevant to the next action.
-3. Search the referenced transcript only when the summary and relevant files leave a specific question that blocks the next action. Choose the session from the index and follow [transcript lookup](#transcript-lookup). Older task files may omit the index and can still be resumed from their summaries.
+3. Search the referenced transcript only when the summary and relevant files leave a specific question that blocks the next action. Choose the session from the index and follow [transcript lookup](#transcript-lookup). Read older handoffs in their existing layout. If there is no index, resume from the summary.
 4. Ask whether to continue. Once confirmed, set the task's frontmatter `status` to `popped` and continue with the agreed next action.
 
 ## Apply
@@ -26,6 +26,7 @@ Find the named task or list active stashes and ask which one to discard. Show it
 
 ## Transcript lookup
 
+- The index is headed `Session Log` in new tasks. The helper also recognizes legacy Japanese headings for the log and artifacts. It updates an existing log in place or adds `Session Log` after the artifacts section, with the end of the file as the fallback.
 - Pass the reference as written in the index. A bare UUID refers to a Claude Code session, including its subagent logs. A `codex:<thread-id>` reference identifies a Codex thread.
 - `session.sh find <reference>` shows user messages. Add a search term to include assistant messages, tool calls, and results. Matching is case-insensitive and literal. The default output is at most 50 rows of 300 characters each, with timestamps in JST. Use `--max N` to change the row limit (`0` for all rows) and `--full` when you need the full text of a match.
 - Look only in the selected session. If its local log is unavailable, continue using the saved summary. The task file can travel between machines, while the referenced transcripts stay where the agent recorded them.

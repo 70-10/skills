@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-# stash skill 用の一覧表示スクリプト
-# .claude/todos/*.md の frontmatter から task/title, status, stashed_at を抽出し
-# stashed_at の新しい順で整形表示する。
 
 set -euo pipefail
 

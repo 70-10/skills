@@ -8,7 +8,8 @@ import unittest
 
 CLAUDE_ID = "71a4a200-1111-4444-8111-012345678901"
 CODEX_ID = "019cc167-2222-7444-8222-012345678902"
-LOG_HEADING = "## セッションログ"
+LOG_HEADING = "## Session Log"
+LEGACY_LOG_HEADING = "## セッションログ"
 SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 
 
@@ -62,38 +63,63 @@ class StashTest(unittest.TestCase):
         self.assertIn("Legacy title", result.stdout)
 
 
-    def test_ref_appends_legacy_and_codex_refs_and_updates_only_the_matching_row(self):
-        existing_ref = f"`{CLAUDE_ID}`"
-        path = self.task(
-            "task", "task: Carry over\nstatus: paused\nstashed_at: 2020-01-01",
-            f"## 成果物\n- Mention of {existing_ref} outside the log\n\n## 注意点\n- Keep this\n",
-        )
+    def test_ref_inserts_english_log_after_artifacts_or_at_end(self):
+        self.log(f"claude-projects/project/{CLAUDE_ID}.jsonl")
+        for heading in ("## Artifacts", "## 成果物", None):
+            with self.subTest(heading=heading):
+                artifact = f"{heading}\n- Link to `{CLAUDE_ID}` outside the log\n\n" if heading else ""
+                notes = "## Notes\n- Keep this\n"
+                path = self.task("task", "task: Carry over\nstatus: paused", artifact + notes)
+                result = self.invoke("session.sh", "ref", str(path), "--append", "First session",
+                                     env={"CLAUDE_SESSION_ID": CLAUDE_ID})
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertTrue(result.stdout.endswith("\tnew\n"))
+                body = path.read_text(encoding="utf-8")
+                self.assertIn(notes, body)
+                self.assertIn(" — First session\n", body)
+                self.assertNotIn(LEGACY_LOG_HEADING, body)
+                if heading:
+                    self.assertIn(artifact, body)
+                    self.assertLess(body.index(heading), body.index(LOG_HEADING))
+                    self.assertLess(body.index(LOG_HEADING), body.index(notes))
+                else:
+                    self.assertLess(body.index(notes), body.index(LOG_HEADING))
+
+    def test_ref_preserves_existing_index_and_replaces_only_the_matching_row(self):
         self.log(f"claude-projects/project/{CLAUDE_ID}.jsonl")
         self.log(f"codex/sessions/2026/11/25/rollout-2026-11-25T10-00-00-{CODEX_ID}.jsonl")
         legacy_env = {"CLAUDE_SESSION_ID": CLAUDE_ID}
-        self.assertTrue(self.invoke("session.sh", "ref", str(path),
-                                    env=legacy_env).stdout.endswith("\tnew\n"))
-        for agent, env, note, reference, state in (
-            ("claude-code", legacy_env, "first session", CLAUDE_ID, "new"),
-            ("codex", {"CODEX_THREAD_ID": CODEX_ID, "CODEX_SESSION_ID": CLAUDE_ID},
-             "second session", f"codex:{CODEX_ID}", "new"),
-            ("claude-code", legacy_env, r"literal \n and \t", CLAUDE_ID, "updated"),
-        ):
-            with self.subTest(agent=agent, state=state):
-                result = self.invoke(
-                    "session.sh", "ref", str(path), "--agent", agent, "--append", note, env=env,
+        codex_env = {"CODEX_THREAD_ID": CODEX_ID, "CODEX_SESSION_ID": CLAUDE_ID}
+        for heading in (LOG_HEADING, LEGACY_LOG_HEADING):
+            with self.subTest(heading=heading):
+                notes = f"## 注意点\n- 別の節から `{CLAUDE_ID}` を参照\n"
+                path = self.task(
+                    "task", "task: Carry over\nstatus: paused\nstashed_at: 2020-01-01",
+                    f"{heading}\n- 2020-01-01 00:00 `{CLAUDE_ID}` — old note\n\n{notes}",
                 )
-                self.assertEqual(result.returncode, 0, result.stderr)
-                stamp, ref, actual_state = result.stdout.strip().split("\t")
-                self.assertEqual((ref, actual_state), (reference, state))
-                body = path.read_text(encoding="utf-8")
-                self.assertIn(f"stashed_at: {stamp}\n", body)
-                self.assertIn(f"- {stamp} `{reference}` — {note}\n", body)
-        self.assertIn(f"Mention of {existing_ref} outside the log", body)
-        self.assertNotIn("first session", body)
-        self.assertIn("second session", body)
-        self.assertLess(body.index("## 成果物"), body.index(LOG_HEADING))
-        self.assertLess(body.index(LOG_HEADING), body.index("## 注意点"))
+                existing = self.invoke("session.sh", "ref", str(path), env=legacy_env)
+                self.assertEqual(existing.returncode, 0, existing.stderr)
+                self.assertTrue(existing.stdout.endswith("\texists\n"))
+                for agent, env, note, reference, state in (
+                    ("codex", codex_env, "new thread", f"codex:{CODEX_ID}", "new"),
+                    ("claude-code", legacy_env, r"literal \n and \t", CLAUDE_ID, "updated"),
+                ):
+                    result = self.invoke(
+                        "session.sh", "ref", str(path), "--agent", agent, "--append", note, env=env,
+                    )
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    stamp, ref, actual_state = result.stdout.strip().split("\t")
+                    self.assertEqual((ref, actual_state), (reference, state))
+                    body = path.read_text(encoding="utf-8")
+                    self.assertIn(f"stashed_at: {stamp}\n", body)
+                    self.assertIn(f"- {stamp} `{reference}` — {note}\n", body)
+                self.assertEqual(body.count(heading), 1)
+                other_heading = LEGACY_LOG_HEADING if heading == LOG_HEADING else LOG_HEADING
+                self.assertNotIn(other_heading, body)
+                self.assertEqual(body.count(f"`{CLAUDE_ID}`"), 2)
+                self.assertNotIn("old note", body)
+                self.assertIn("new thread", body)
+                self.assertIn(notes, body)
 
     def test_ref_saves_timestamp_without_local_session_log(self):
         for env in ({}, {"CODEX_SESSION_ID": CODEX_ID}):
@@ -110,6 +136,7 @@ class StashTest(unittest.TestCase):
                 self.assertIn(f"stashed_at: {stamp}\n---", body)
                 self.assertIn("Continue without transcript.", body)
                 self.assertNotIn(LOG_HEADING, body)
+                self.assertNotIn(LEGACY_LOG_HEADING, body)
         self.assertEqual(self.invoke("session.sh", "ref").returncode, 1)
 
     def test_ref_leaves_malformed_task_untouched(self):

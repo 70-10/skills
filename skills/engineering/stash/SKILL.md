@@ -1,6 +1,6 @@
 ---
 name: stash
-description: Save, list, resume, or discard project task context between Claude Code and Codex sessions. Use when asked to stash work, pause and pick up later, or resume a saved task, including 作業を保存, 中断したい, and 前回の続き.
+description: Save, list, resume, or discard project task context between Claude Code and Codex sessions. Use when asked to stash work, pause and pick up later, or resume a saved task.
 ---
 
 # Stash

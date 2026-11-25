@@ -1,5 +1,3 @@
-"""Record and read local session references for the stash skill."""
-
 import argparse
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
@@ -16,8 +14,9 @@ import tempfile
 
 SESSION_ID = re.compile(r"[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}")
 JST = timezone(timedelta(hours=9))
-LOG_HEADING = "## セッションログ"
-ARTIFACTS_HEADING = "## 成果物"
+LOG_HEADING = "## Session Log"
+LOG_HEADINGS = (LOG_HEADING, "## セッションログ")
+ARTIFACTS_HEADINGS = ("## Artifacts", "## 成果物")
 LOG_ROW = re.compile(r"^- \d{4}-\d{2}-\d{2} \d{2}:\d{2} `([^`]+)` — ")
 
 
@@ -66,8 +65,8 @@ def session_logs(reference):
     ]
 
 
-def heading_range(lines, heading):
-    start = next((i for i, line in enumerate(lines) if line.rstrip() == heading), None)
+def heading_range(lines, headings):
+    start = next((i for i, line in enumerate(lines) if line.rstrip() in headings), None)
     if start is None:
         return None
     end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")), len(lines))
@@ -85,7 +84,7 @@ def reference_row(lines, section, reference):
 
 
 def update_reference(lines, stamp, reference, note):
-    section = heading_range(lines, LOG_HEADING)
+    section = heading_range(lines, LOG_HEADINGS)
     existing = reference_row(lines, section, reference)
     row = f"- {stamp} `{reference}` — {note}\n"
     if existing is not None:
@@ -93,7 +92,7 @@ def update_reference(lines, stamp, reference, note):
         return "updated"
 
     if section is None:
-        artifacts = heading_range(lines, ARTIFACTS_HEADING)
+        artifacts = heading_range(lines, ARTIFACTS_HEADINGS)
         index = artifacts[1] if artifacts else len(lines)
         if index and lines[index - 1].strip():
             lines.insert(index, "\n")
@@ -119,7 +118,6 @@ def update_timestamp(lines, stamp):
 
 @contextmanager
 def lock_task_directory(directory):
-    # Replacing a task changes its inode; the directory lock remains stable for other saves.
     fd = os.open(directory, os.O_RDONLY)
     try:
         fcntl.flock(fd, fcntl.LOCK_EX)
@@ -174,7 +172,7 @@ def record_reference(args):
         state = "new"
         if args.task and args.task.is_file():
             lines = args.task.read_text(encoding="utf-8").splitlines()
-            if reference_row(lines, heading_range(lines, LOG_HEADING), reference) is not None:
+            if reference_row(lines, heading_range(lines, LOG_HEADINGS), reference) is not None:
                 state = "exists"
 
     if warning:
